@@ -1,0 +1,54 @@
+---
+title: "LMASanalysis_ICC"
+author: "Monica Kullar"
+date: "11/24/2020"
+output: html_document
+---
+
+```{r}
+################################
+# LMAS, levels of mood awareness
+################################
+
+library(ggplot2)
+library(ggpubr)
+#loop through each individual participant to caluclate individual ICC
+LMAS <-read.csv("~/LMAS/LMASscores.csv", na.strings="")
+lmasshort <- c("moniker", "group", "LMAS_TOTAL")
+LMAS <- LMAS[lmasshort]
+LMASscale <- scale(LMAS[,3])
+names <- LMAS[,1:2]
+LMAS <- cbind(names, LMASscale)
+LMAS <- as.data.frame(LMAS)
+names(LMAS)[names(LMAS) == "LMASscale"] <- "MoodAwareness"
+
+#omitting nas until i get all group information
+LMAS <- na.omit(LMAS)
+LMAS$group <- as.factor(LMAS$group)
+LMAS$MoodAwareness <- as.numeric(LMAS$MoodAwareness)
+
+#plot
+my_comparison <- list( c("bipolar", "healthy"), c("bipolar", "remitted"), c("healthy", "depressed"), c("healthy", "remitted"), c("depressed", "remitted"), c("bipolar", "depressed"))
+#none significant
+ggplot(LMAS, aes(y=MoodAwareness, x=group)) + theme_classic() + geom_violin(aes(color = group, fill=group)) + geom_boxplot() + coord_cartesian(ylim=c(-3,5.5)) + stat_compare_means(comparisons = my_comparison, label = "p.signif") + stat_compare_means(label.y = -3) + scale_y_continuous(name = "Mood Awareness")
+
+ggplot(LMAS, aes(y=MoodAwareness, x=group)) + theme_classic() + geom_violin(aes(color = group, fill=group)) + geom_boxplot() + coord_cartesian(ylim=c(-3,5.5)) + scale_y_continuous(name = "Mood Awareness")
+
+
+#attach data-driven group assignments
+gimgrou <- read.csv("~/GIMME/summaryFit.csv")
+names(gimgrou)[names(gimgrou) == "file"] <- "moniker"
+LMASgimme <- merge(LMAS, gimgrou[,c(1,14)], by="moniker")
+LMASgimme <- na.omit(LMASgimme)
+LMASgimme$sub_membership <- as.factor(LMASgimme$sub_membership)
+LMASgimme$sub_membership[LMASgimme$sub_membership == "3"] <- NA #exclude the outlier data-driven group
+LMASgimme <- na.omit(LMASgimme)
+
+#plot
+my_comparison <- list( c("1", "2"))
+ggplot(LMASgimme, aes(y=MoodAwareness, x=sub_membership)) + theme_classic() + geom_violin(aes(color = sub_membership, fill=sub_membership)) + geom_boxplot() + coord_cartesian(ylim=c(-3,5.5)) + stat_compare_means(comparisons = my_comparison, label = "p.signif") + stat_compare_means(label.y = -3) + scale_y_continuous(name = "Mood Awareness")
+
+ggplot(LMASgimme, aes(y=MoodAwareness, x=sub_membership)) + theme_classic() + geom_violin(aes(color = sub_membership, fill=sub_membership)) + geom_boxplot() + coord_cartesian(ylim=c(-3,5.5)) + scale_y_continuous(name = "Mood Awareness")
+
+```
+
